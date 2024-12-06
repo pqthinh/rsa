@@ -12,6 +12,8 @@
                     <option>1024 Bits</option>
                     <option>2048 Bits</option>
                     <option>4096 Bits</option>
+                    <option>8192 Bits</option>
+                    <option>16384 Bits</option>
                 </select>
             </div>
             <div class="key-container">
@@ -24,7 +26,7 @@
                     <textarea v-model="privateKey" rows="10" placeholder="Private Key"></textarea>
                 </div>
             </div>
-            <button @click="generateKeys">Create public / Private key</button>
+            <button class="button" @click="generateKeys">Create public / Private key</button>
         </section>
 
         <!-- RSA Encryption -->
@@ -39,8 +41,9 @@
                     <label>Public Key</label>
                     <textarea v-model="encryptionKey" rows="5" placeholder="Public key"></textarea>
                 </div>
-                <button @click="encryptText">Encrypt</button>
+                
             </div>
+            <button class="button" @click="encryptText">Encrypt</button>
             <div class="form-control">
                 <label>Encrypted Text</label>
                 <textarea v-model="encryptedText" rows="20" readonly></textarea>
@@ -59,8 +62,9 @@
                     <label>Private Key</label>
                     <textarea v-model="decryptionKey" rows="5" placeholder="Private key"></textarea>
                 </div>
-                <button @click="decryptText">Decrypt</button>
+                
             </div>
+            <button class="button" @click="decryptText">Decrypt</button>
             <div class="form-control">
                 <label>Decrypted Text</label>
                 <textarea v-model="decryptedText" rows="20" readonly></textarea>
@@ -147,4 +151,36 @@ button {
 button:hover {
     background-color: #218838;
 }
+.form-container {
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+.form-container label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: #333;
+}
+
+.form-container input,
+.form-container textarea {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.form-container input:focus,
+.form-container textarea:focus {
+    outline: none;
+    border-color: #28a745;
+    box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.25);
+}
+
 </style>

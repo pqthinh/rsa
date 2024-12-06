@@ -10,7 +10,7 @@
                 <a href="/about">About Us</a>
                 <a href="/tools">Tools</a>
                 <a href="/supporters">Supporters</a>
-                <a href="https://www.buymeacoffee.com/sanojsen">Buy Me a Coffee</a>
+                <a href="https://www.buymeacoffee.com/thinhpq10">Buy Me a Coffee</a>
             </div>
         </div>
     </footer>
