@@ -1,0 +1,477 @@
+@import './base.css';
+
+:root {
+  --font-montesserat: "Montserrat", sans-serif;
+  --background-color: #fff;
+  --font-color: #333
+}
+
+* {
+  box-sizing: border-box
+}
+
+*,
+body,
+html {
+  padding: 0;
+  margin: 0
+}
+
+body,
+html {
+  max-width: 100vw;
+  overflow-x: hidden;
+  font-size: 14px;
+  color: rgb(var(--font-color));
+  background: var(--background-color);
+  font-weight: 500;
+  font-family: var(--font-montesserat)
+}
+
+.fnSml {
+  font-size: 12px
+}
+
+.cl72,
+.fnSml {
+  color: #727272
+}
+
+.cl84 {
+  color: #ea8484
+}
+
+.fn22 {
+  font-size: 22px;
+  font-weight: 700
+}
+
+.fn24 {
+  font-size: 24px
+}
+
+.fn14b {
+  font-size: 14px;
+  font-weight: 700
+}
+
+h1 {
+  font-size: 24px
+}
+
+h2 {
+  font-size: 16px
+}
+
+h3 {
+  font-size: 15px
+}
+
+a {
+  color: rgb(var(--font-color));
+  font-weight: 500
+}
+
+a,
+ul {
+  text-decoration: none
+}
+
+ul {
+  list-style: none
+}
+
+label {
+  display: block;
+  font-size: 12px
+}
+
+.relative {
+  position: relative
+}
+
+.layout_container {
+  display: flex;
+  justify-content: center
+}
+
+.layout_section {
+  padding: 1rem;
+  width: 800px
+}
+
+.layout_side_links {
+  padding: 1rem;
+  width: 260px;
+  border-left: 1px solid #ccc
+}
+
+.side_links_li {
+  font-size: 13px
+}
+
+.flex,
+.mflex {
+  display: flex
+}
+
+.spb {
+  justify-content: space-between
+}
+
+.alc {
+  align-items: center
+}
+
+.text_center {
+  text-align: center
+}
+
+.text_right {
+  text-align: right
+}
+
+.flex1 {
+  flex: 1 1
+}
+
+.wd30 {
+  width: 29%
+}
+
+.wd50 {
+  width: 49%
+}
+
+.wd70 {
+  width: 69%
+}
+
+.mwd25 {
+  width: 25%
+}
+
+.mwd30 {
+  width: 29%
+}
+
+.mwd50 {
+  width: 49%
+}
+
+.mwd70 {
+  width: 69%
+}
+
+.mt1r {
+  margin-top: 1rem
+}
+
+.mt05r {
+  margin-top: .5rem
+}
+
+.mr10px {
+  margin-right: 10px
+}
+
+.pd10s {
+  padding: 10px 0
+}
+
+.pd5s {
+  padding: 5px 0
+}
+
+.ptr {
+  cursor: pointer
+}
+
+.form-control {
+  margin-top: 1rem
+}
+
+.form-control input,
+.form-control textarea {
+  border: 2px solid #ccc;
+  border-radius: 5px;
+  width: 100%;
+  font-size: 14px;
+  padding: 10px;
+  outline: none;
+  margin-top: 7px;
+  font-family: var(--font-montesserat);
+  font-weight: 500
+}
+
+.form-control textarea {
+  resize: vertical
+}
+
+.form-control button {
+  width: 100%;
+  color: #fff;
+  background: #000;
+  padding: 10px;
+  border: 1px solid #000;
+  font-weight: 500;
+  font-size: 15px;
+  cursor: pointer
+}
+
+.form_pills {
+  margin-top: 7px;
+  display: flex;
+  flex-wrap: wrap
+}
+
+.pill {
+  padding: 3px 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  margin-right: 3px;
+  cursor: pointer;
+  margin-bottom: 3px
+}
+
+.error {
+  color: #ea8484;
+  margin-top: 5px;
+  font-size: 13px
+}
+
+.active_pill {
+  color: #fff;
+  background-color: #000
+}
+
+.select_box {
+  padding: 10px;
+  margin-top: 7px
+}
+
+.select_box,
+.select_box_list {
+  outline: none;
+  border: 2px solid #ccc;
+  border-radius: 5px
+}
+
+.select_box_list {
+  position: absolute;
+  width: 100%;
+  background: #fff;
+  z-index: 1
+}
+
+.select_box .icon {
+  height: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center
+}
+
+.icon img {
+  margin-top: 5px;
+  height: 100%
+}
+
+.select_box_item {
+  padding: 10px;
+  border-bottom: 1px solid #ccc;
+  cursor: pointer
+}
+
+.smlBx {
+  border: 2px solid #ccc;
+  border-radius: 5px;
+  width: 100%;
+  padding: 10px;
+  text-align: center;
+  margin-top: 1rem
+}
+
+.flex-wrap {
+  flex-wrap: wrap
+}
+
+.errBrd {
+  background: #f0acac !important;
+  border: 2px solid #f0acac !important
+}
+
+.validBrd {
+  background: #b1f0ac !important;
+  border: 2px solid #b1f0ac !important
+}
+
+.ln2 {
+  line-height: 2.5
+}
+
+.social_icons {
+  height: 30px;
+  margin-right: 20px
+}
+
+.social_icons img {
+  height: 100%
+}
+
+.full_width_section {
+  width: 1060px;
+  margin: auto;
+  padding: 1rem;
+  min-height: calc(100vh - 9rem)
+}
+
+.tool_bx {
+  cursor: pointer;
+  width: 30%;
+  padding: 10px;
+  border-radius: 3px;
+  border: 1px solid #ccc;
+  margin-right: 20px;
+  margin-bottom: 20px
+}
+
+.blank_bx {
+  border: 2px solid #ccc;
+  width: 100%;
+  font-size: 14px;
+  padding: 10px;
+  outline: none;
+  margin-top: 7px;
+  font-family: var(--font-montesserat);
+  font-weight: 500;
+  min-height: 230px
+}
+
+.blank_bx,
+.copy {
+  border-radius: 5px
+}
+
+.copy {
+  width: 50px;
+  background: #ccc;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%)
+}
+
+video {
+  width: 100%
+}
+
+.grid_container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr)
+}
+
+.grid_thumb {
+  cursor: pointer
+}
+
+.thumb_ico {
+  min-width: 60px;
+  min-height: 60px;
+  justify-content: center;
+  background: #ccc;
+  margin-right: 10px;
+  color: #fff;
+  font-size: 22px;
+  font-weight: 600
+}
+
+.grid_desc_container {
+  padding-right: 10px
+}
+
+.grid_thumb:hover .thumb_ico {
+  scale: 1.05;
+  border-radius: 3px
+}
+
+input::-webkit-inner-spin-button,
+input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0
+}
+
+.date_picker .MuiTextField-root {
+  width: 100% !important;
+  border-radius: 5px;
+  margin-top: 7px
+}
+
+.date_picker input {
+  padding: 10px !important
+}
+
+@media (max-width: 768px) {
+  .tool_bx {
+    width: 49%
+  }
+
+  .layout_container {
+    flex-direction: column
+  }
+
+  .layout_section {
+    width: 100%
+  }
+
+  .mflex {
+    flex-direction: column
+  }
+
+  .full_width_section,
+  .layout_side_links,
+  .wd30,
+  .wd50,
+  .wd70 {
+    width: 100%
+  }
+
+  .tool_bx {
+    width: 48%;
+    margin-right: 4px;
+    margin-bottom: 4px
+  }
+
+  .side_links_li {
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    margin-top: 8px
+  }
+
+  .side_links_li li {
+    width: 48%;
+    padding: 8px;
+    margin: 2px;
+    min-height: 50px;
+    border-radius: 3px;
+    border: 1px solid #ccc
+  }
+
+  .mhidden {
+    display: none
+  }
+
+  .grid_container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr)
+  }
+}
+
+@media (max-width: 481px) {
+  .grid_container {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr)
+  }
+}
