@@ -32,6 +32,27 @@ function modInverse(a, m) {
     return x;
 }
 
+// Hàm tính lũy thừa modular (a^b mod n) sử dụng thuật toán bình phương và nhân
+function modPow(base, exponent, modulus) {
+    if (modulus === 1n) return 0n;
+    
+    let result = 1n;
+    base = base % modulus;
+    
+    while (exponent > 0n) {
+        // If exponent is odd, multiply result with base
+        if (exponent & 1n) {
+            result = (result * base) % modulus;
+        }
+        // Square the base
+        base = (base * base) % modulus;
+        // Divide exponent by 2
+        exponent = exponent >> 1n;
+    }
+    
+    return result;
+}
+
 // Hàm kiểm tra số nguyên tố với tối ưu hoá
 function isPrime(num) {
     if (num <= 1) return false;
@@ -47,13 +68,26 @@ function isPrime(num) {
 
 // Hàm sinh số nguyên tố ngẫu nhiên trong phạm vi [min, max]
 function getRandomPrime(min, max) {
-    let prime;
-    do {
-        // Random odd number to increase speed (even numbers cannot be prime except 2)
-        prime = Math.floor(Math.random() * (max - min + 1)) + min;
-        if (prime % 2 === 0) prime++; // Make sure it's odd
-    } while (!isPrime(prime));
-    return prime;
+    // Ensure min and max are odd numbers
+    min = min % 2 === 0 ? min + 1 : min;
+    max = max % 2 === 0 ? max - 1 : max;
+    
+    const range = (max - min) / 2;
+    let attempts = 0;
+    const MAX_ATTEMPTS = 1000; // Prevent infinite loops
+    
+    while (attempts < MAX_ATTEMPTS) {
+        // Generate random odd number by getting random even number and adding 1
+        const randomOffset = Math.floor(Math.random() * range) * 2;
+        const prime = min + randomOffset;
+        
+        if (isPrime(prime)) {
+            return prime;
+        }
+        attempts++;
+    }
+    
+    throw new Error('Failed to find prime number in range after maximum attempts');
 }
 
 // Hàm sinh cặp khóa RSA (public, private)
@@ -83,7 +117,7 @@ export function generateKeys(bits) {
 
 // Hàm mã hóa một thông điệp m với khóa công khai (e, n)
 export function encrypt(publicKey, message) {
-    const { e, n } = publicKey;
+    const { e, n } = JSON.parse(publicKey);
     const messageInt = BigInt('0x' + Buffer.from(message, 'utf8').toString('hex'));  // Chuyển chuỗi thành số nguyên
 
     // Mã hóa m^e mod n
@@ -93,14 +127,14 @@ export function encrypt(publicKey, message) {
 
 // Hàm giải mã một thông điệp đã mã hóa với khóa riêng (d, n)
 export function decrypt(privateKey, encryptedMessage) {
-    const { d, n } = privateKey;
+    const { d, n } = JSON.parse(privateKey);
     const encryptedInt = BigInt(encryptedMessage);
-
-    // Giải mã c^d mod n
-    const decrypted = encryptedInt ** BigInt(d) % BigInt(n);
-    const decryptedHex = decrypted.toString(16);  // Chuyển số nguyên giải mã ra dạng hex
-    const decryptedMessage = Buffer.from(decryptedHex, 'hex').toString('utf8');  // Chuyển hex thành chuỗi
-
+    
+    // Use modPow instead of direct exponentiation
+    const decrypted = modPow(encryptedInt, BigInt(d), BigInt(n));
+    const decryptedHex = decrypted.toString(16);
+    const decryptedMessage = Buffer.from(decryptedHex, 'hex').toString('utf8');
+    
     return decryptedMessage;
 }
 

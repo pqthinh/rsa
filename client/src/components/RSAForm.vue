@@ -28,7 +28,7 @@
                     <textarea v-model="privateKey" rows="10" placeholder="Private Key"></textarea>
                 </div>
             </div>
-            <button class="button" @click="generateKeysFunction">Create public / Private key</button>
+            <button class="button" @click="generateKeysFunction">Create Publickey / Privatekey</button>
         </section>
 
         <!-- RSA Encryption -->
@@ -97,22 +97,28 @@ export default {
             // Logic to generate RSA keys
             console.log('Generating keys for', this.selectedBits);
             const keys = generateKeys(this.selectedBits);
-            this.publicKey = createPublicKeyPem(keys.publicKey.e, keys.publicKey.n);
-            this.privateKey = createPrivateKeyPem(keys.privateKey.d, keys.privateKey.n);
-            console.log(this.publicKey);
-            console.log(this.privateKey);
+            // this.publicKey = createPublicKeyPem(keys.publicKey.e, keys.publicKey.n);
+            // this.privateKey = createPrivateKeyPem(keys.privateKey.d, keys.privateKey.n);
+            // console.log(this.publicKey);
+            // console.log(this.privateKey);
+            this.publicKey = JSON.stringify(keys.publicKey);
+            this.privateKey = JSON.stringify(keys.privateKey);
 
         },
         encryptText() {
             // Encrypt the encryptionText using encryptionKey
-            this.encryptedText = 'Encrypted: ' + this.encryptionText; // Placeholder logic
-            const encrypted = encrypt(parseRSAPublicKey(this.encryptionKey), this.encryptionText);
+            // this.encryptedText = 'Encrypted: ' + this.encryptionText; // Placeholder logic
+            // const encrypted = encrypt(parseRSAPublicKey(this.encryptionKey), this.encryptionText);
+            // this.encryptedText = encrypted;
+            const encrypted = encrypt(this.publicKey, this.encryptionText);
             this.encryptedText = encrypted;
         },
         decryptText() {
             // Decrypt the decryptionText using decryptionKey
-            this.decryptedText = 'Decrypted: ' + this.decryptionText; // Placeholder logic
-            const decrypted = decrypt(parseRSAPrivateKey(this.decryptionKey), this.decryptionText);
+            // this.decryptedText = 'Decrypted: ' + this.decryptionText; // Placeholder logic
+            // const decrypted = decrypt(parseRSAPrivateKey(this.decryptionKey), this.decryptionText);
+            // this.decryptedText = decrypted;
+            const decrypted = decrypt(this.privateKey, this.decryptionText);
             this.decryptedText = decrypted;
         },
     },
