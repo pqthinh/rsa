@@ -8,12 +8,14 @@
             <div class="form-control">
                 <label>Encryption Mode</label>
                 <select v-model="selectedBits">
-                    <option>512 Bits</option>
-                    <option>1024 Bits</option>
-                    <option>2048 Bits</option>
-                    <option>4096 Bits</option>
-                    <option>8192 Bits</option>
-                    <option>16384 Bits</option>
+                    <option value="16">16 Bits</option>
+                    <option value="128">128 Bits</option>
+                    <option value="512">512 Bits</option>
+                    <option value="1024">1024 Bits</option>
+                    <option value="2048">2048 Bits</option>
+                    <option value="4096">4096 Bits</option>
+                    <option value="8192">8192 Bits</option>
+                    <option value="16384">16384 Bits</option>
                 </select>
             </div>
             <div class="key-container">
@@ -26,7 +28,7 @@
                     <textarea v-model="privateKey" rows="10" placeholder="Private Key"></textarea>
                 </div>
             </div>
-            <button class="button" @click="generateKeys">Create public / Private key</button>
+            <button class="button" @click="generateKeysFunction">Create public / Private key</button>
         </section>
 
         <!-- RSA Encryption -->
@@ -74,10 +76,12 @@
 </template>
 
 <script>
+import { generateKeys, encrypt, decrypt, createPublicKeyPem, createPrivateKeyPem, parseRSAPublicKey, parseRSAPrivateKey } from '../utils/rsa';
+
 export default {
     data() {
         return {
-            selectedBits: '512 Bits',
+            selectedBits: '16',
             publicKey: '',
             privateKey: '',
             encryptionText: '',
@@ -89,17 +93,27 @@ export default {
         };
     },
     methods: {
-        generateKeys() {
+        generateKeysFunction() {
             // Logic to generate RSA keys
             console.log('Generating keys for', this.selectedBits);
+            const keys = generateKeys(this.selectedBits);
+            this.publicKey = createPublicKeyPem(keys.publicKey.e, keys.publicKey.n);
+            this.privateKey = createPrivateKeyPem(keys.privateKey.d, keys.privateKey.n);
+            console.log(this.publicKey);
+            console.log(this.privateKey);
+
         },
         encryptText() {
             // Encrypt the encryptionText using encryptionKey
             this.encryptedText = 'Encrypted: ' + this.encryptionText; // Placeholder logic
+            const encrypted = encrypt(parseRSAPublicKey(this.encryptionKey), this.encryptionText);
+            this.encryptedText = encrypted;
         },
         decryptText() {
             // Decrypt the decryptionText using decryptionKey
             this.decryptedText = 'Decrypted: ' + this.decryptionText; // Placeholder logic
+            const decrypted = decrypt(parseRSAPrivateKey(this.decryptionKey), this.decryptionText);
+            this.decryptedText = decrypted;
         },
     },
 };
