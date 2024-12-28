@@ -1,3 +1,6 @@
+### k=32768:
+
+
 ### k=16384:
 Đã lưu khóa công khai vào [mykey.pub]
 Đã lưu khóa bí mật  vào [mykey.key]

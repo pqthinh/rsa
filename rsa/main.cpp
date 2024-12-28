@@ -1,7 +1,22 @@
 #include <iostream>
 #include <fstream>
 #include <chrono>
-#include "rsa_lib.h"  // Include header
+#include <sys/resource.h> // Để thống kê RAM và CPU
+#include <unistd.h>       // Để lấy thông tin hệ thống
+#include "rsa_lib.h"      // Include header
+
+// Hàm lấy thông tin bộ nhớ tiêu tốn
+void logMemoryUsage(const std::string &stage) {
+    struct rusage usage;
+    if (getrusage(RUSAGE_SELF, &usage) == 0) {
+        std::cout << "=== Thống kê tài nguyên tại " << stage << " ===\n";
+        std::cout << "Bộ nhớ RAM tiêu tốn: " << usage.ru_maxrss / 1024.0 << " MB\n";
+        std::cout << "Thời gian CPU (user): " << usage.ru_utime.tv_sec << "s " << usage.ru_utime.tv_usec / 1000 << "ms\n";
+        std::cout << "Thời gian CPU (system): " << usage.ru_stime.tv_sec << "s " << usage.ru_stime.tv_usec / 1000 << "ms\n\n";
+    } else {
+        std::cerr << "Không thể lấy thông tin tài nguyên!\n";
+    }
+}
 
 int main() {
     int keyBitSize;
@@ -33,6 +48,9 @@ int main() {
         std::cout << "\nĐã lưu khóa công khai vào [mykey.pub]\n"
                   << "Đã lưu khóa bí mật  vào [mykey.key]\n\n";
         std::cout << "Thời gian tạo khóa: " << keyGenDuration.count() << " ms\n\n";
+
+        // Thống kê tài nguyên sau khi tạo khóa
+        logMemoryUsage("tạo khóa");
     } catch (const std::exception &ex) {
         std::cerr << "Lỗi khi sinh khóa: " << ex.what() << std::endl;
         return 1;
@@ -56,6 +74,9 @@ int main() {
 
             std::cout << "Đã mã hóa file [" << sourceFile << "] => [" << cipherFile << "]\n";
             std::cout << "Thời gian mã hóa: " << encryptDuration.count() << " ms\n\n";
+
+            // Thống kê tài nguyên sau khi mã hóa
+            logMemoryUsage("mã hóa");
         } else {
             std::cerr << "EncryptFile thất bại!\n";
             return 1;
@@ -82,6 +103,9 @@ int main() {
 
             std::cout << "Đã giải mã file [" << cipherFile << "] => [" << destFile << "]\n";
             std::cout << "Thời gian giải mã: " << decryptDuration.count() << " ms\n\n";
+
+            // Thống kê tài nguyên sau khi giải mã
+            logMemoryUsage("giải mã");
         } else {
             std::cerr << "DecryptFile thất bại!\n";
             return 1;

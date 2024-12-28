@@ -32,9 +32,6 @@ struct PrivateKey {
     std::vector<unsigned char> Decrypt(const std::vector<unsigned char> &data, int size) const;
 };
 
-// ----------------- CÁC HÀM BigInt & RSA -----------------
-
-// Tương đương BigInt.go
 mpz_class NewDecimal(const std::string &decimal);
 mpz_class PowModulo(const mpz_class &b, const mpz_class &e, const mpz_class &m);
 mpz_class PowModulo2(const mpz_class &n, const mpz_class &exp, const mpz_class &mod);
@@ -43,7 +40,6 @@ bool IsPrime(const mpz_class &n);
 mpz_class GetNextPrime(mpz_class n, bool verbose=false, bool debug=false);
 mpz_class GetRandomPrime(int size, bool verbose=false, bool debug=false);
 
-// Tương đương rsa.go
 void CreateRSAKey(int keyBitSize, bool verbose, bool debug,
                   PublicKey &pubKey, PrivateKey &privKey);
 int EncryptFile(const std::string &sourcePath,
@@ -58,4 +54,4 @@ int SaveKeys(const std::string &path, const PublicKey &pub, const PrivateKey &pr
 PublicKey*  GetPublicKey(const std::string &path);
 PrivateKey* GetPrivateKey(const std::string &path);
 
-#endif // RSA_LIB_H
+#endif
