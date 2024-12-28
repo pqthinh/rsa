@@ -21,3 +21,4 @@ g++ test_k8192.cpp rsa_lib.cpp -lgmp -lgmpxx -o 8192
 
 g++ -o rsa8192 main.cpp rsa_lib.cpp -I/opt/homebrew/include -L/opt/homebrew/lib -lgmp -lgmpxx -std=c++17
 
+g++ -o rsa main.cpp rsa_lib.cpp -I/opt/homebrew/include -L/opt/homebrew/lib -lgmp -lgmpxx -std=c++17 -pthread

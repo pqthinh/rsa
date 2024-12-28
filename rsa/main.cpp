@@ -1,133 +1,99 @@
+// main.cpp
+#include "rsa_lib.h"
 #include <iostream>
-#include <fstream>
-#include <chrono>
-#include <sys/resource.h> // Để thống kê RAM và CPU
-#include <unistd.h>       // Để lấy thông tin hệ thống
-#include "rsa_lib.h"      // Include header
-
-// Hàm lấy thông tin bộ nhớ tiêu tốn
-void logMemoryUsage(const std::string &stage) {
-    struct rusage usage;
-    if (getrusage(RUSAGE_SELF, &usage) == 0) {
-        std::cout << "=== Thống kê tài nguyên tại " << stage << " ===\n";
-        std::cout << "Bộ nhớ RAM tiêu tốn: " << usage.ru_maxrss / 1024.0 << " MB\n";
-        std::cout << "Thời gian CPU (user): " << usage.ru_utime.tv_sec << "s " << usage.ru_utime.tv_usec / 1000 << "ms\n";
-        std::cout << "Thời gian CPU (system): " << usage.ru_stime.tv_sec << "s " << usage.ru_stime.tv_usec / 1000 << "ms\n\n";
-    } else {
-        std::cerr << "Không thể lấy thông tin tài nguyên!\n";
-    }
-}
+#include <limits>
+#include <chrono>    // Thêm thư viện chrono để đo thời gian
+#include <fstream>   // Thêm thư viện fstream để sử dụng ifstream và ofstream
 
 int main() {
-    int keyBitSize;
-    bool verbose = true; // In thông tin chi tiết
-    bool debug = false;  // Tắt debug để tăng tốc
+    int keysize;
+    std::cout << "Enter RSA key size (in bits, e.g., 2048): ";
+    while (!(std::cin >> keysize) || keysize < 512 || keysize % 64 != 0) {
+        std::cout << "Invalid input. Please enter a key size that is a multiple of 64 and at least 512 bits: ";
+        std::cin.clear();
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    }
 
-    // Hỏi người dùng nhập độ dài khóa
-    std::cout << "Nhập độ dài khóa RSA (ví dụ: 2048, 4096, 8192): ";
-    std::cin >> keyBitSize;
-
-    std::cout << "=== SINH KHOA RSA (" << keyBitSize << " bits) ===\n";
+    std::string keypath = "mykey";
 
     PublicKey pub;
     PrivateKey priv;
 
     try {
-        // Đo thời gian bắt đầu tạo khóa
-        auto startKeyGen = std::chrono::high_resolution_clock::now();
+        // Đo thời gian tạo khóa
+        auto start_keygen = std::chrono::high_resolution_clock::now();
+        std::cout << "Generating RSA keys...\n";
+        CreateRSAKey(keysize, true, false, pub, priv);
+        auto end_keygen = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> duration_keygen = end_keygen - start_keygen;
+        std::cout << "Time taken to generate keys: " << duration_keygen.count() << " seconds\n";
 
-        // Tạo khóa RSA
-        CreateRSAKey(keyBitSize, verbose, debug, pub, priv);
-
-        // Đo thời gian kết thúc tạo khóa
-        auto endKeyGen = std::chrono::high_resolution_clock::now();
-        auto keyGenDuration = std::chrono::duration_cast<std::chrono::milliseconds>(endKeyGen - startKeyGen);
-
-        // Lưu khóa vào file
-        SaveKeys("mykey", pub, priv);
-        std::cout << "\nĐã lưu khóa công khai vào [mykey.pub]\n"
-                  << "Đã lưu khóa bí mật  vào [mykey.key]\n\n";
-        std::cout << "Thời gian tạo khóa: " << keyGenDuration.count() << " ms\n\n";
-
-        // Thống kê tài nguyên sau khi tạo khóa
-        logMemoryUsage("tạo khóa");
-    } catch (const std::exception &ex) {
-        std::cerr << "Lỗi khi sinh khóa: " << ex.what() << std::endl;
-        return 1;
-    }
-
-    // BƯỚC 2: Mã hóa file
-    std::string sourceFile = "plaintext.txt";   // file gốc
-    std::string cipherFile = "cipher.dat";      // file mã hóa
-    std::string pubKeyPath = "mykey.pub";       // khóa công khai đã lưu
-
-    std::cout << "=== MA HOA FILE ===\n";
-
-    try {
-        // Đo thời gian bắt đầu mã hóa
-        auto startEncrypt = std::chrono::high_resolution_clock::now();
-
-        if (EncryptFile(sourceFile, cipherFile, pubKeyPath) == 0) {
-            // Đo thời gian kết thúc mã hóa
-            auto endEncrypt = std::chrono::high_resolution_clock::now();
-            auto encryptDuration = std::chrono::duration_cast<std::chrono::milliseconds>(endEncrypt - startEncrypt);
-
-            std::cout << "Đã mã hóa file [" << sourceFile << "] => [" << cipherFile << "]\n";
-            std::cout << "Thời gian mã hóa: " << encryptDuration.count() << " ms\n\n";
-
-            // Thống kê tài nguyên sau khi mã hóa
-            logMemoryUsage("mã hóa");
-        } else {
-            std::cerr << "EncryptFile thất bại!\n";
+        // Đo thời gian lưu khóa
+        auto start_save = std::chrono::high_resolution_clock::now();
+        std::cout << "Saving keys to " << keypath << ".pub and " << keypath << ".key\n";
+        if (SaveKeys(keypath, pub, priv) != 0) {
+            std::cerr << "Failed to save keys.\n";
             return 1;
         }
-    } catch (const std::exception &ex) {
-        std::cerr << "Lỗi khi mã hóa: " << ex.what() << std::endl;
+        auto end_save = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> duration_save = end_save - start_save;
+        std::cout << "Time taken to save keys: " << duration_save.count() << " seconds\n";
+
+        std::cout << "Keys generated and saved successfully.\n";
+    } catch (const std::exception &e) {
+        std::cerr << "Error during key generation: " << e.what() << "\n";
         return 1;
     }
 
-    // BƯỚC 3: Giải mã file
-    std::string destFile = "plaintext_dec.txt"; // file sau khi giải mã
-    std::string privKeyPath = "mykey.key";      // khóa bí mật đã lưu
+    // Đo thời gian mã hóa
+    auto start_encrypt = std::chrono::high_resolution_clock::now();
+    std::cout << "Encrypting plaintext.txt to ciphertext.bin using " << keypath << ".pub...\n";
+    if (EncryptFile("plaintext.txt", "ciphertext.bin", keypath + ".pub") != 0) {
+        std::cerr << "Encryption failed.\n";
+        return 1;
+    }
+    auto end_encrypt = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> duration_encrypt = end_encrypt - start_encrypt;
+    std::cout << "Encryption completed successfully.\n";
+    std::cout << "Time taken to encrypt: " << duration_encrypt.count() << " seconds\n";
 
-    std::cout << "=== GIAI MA FILE ===\n";
+    // Đo thời gian giải mã
+    auto start_decrypt = std::chrono::high_resolution_clock::now();
+    std::cout << "Decrypting ciphertext.bin to decrypted.txt using " << keypath << ".key...\n";
+    if (DecryptFile("ciphertext.bin", "decrypted.txt", keypath + ".key") != 0) {
+        std::cerr << "Decryption failed.\n";
+        return 1;
+    }
+    auto end_decrypt = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> duration_decrypt = end_decrypt - start_decrypt;
+    std::cout << "Decryption completed successfully.\n";
+    std::cout << "Time taken to decrypt: " << duration_decrypt.count() << " seconds\n";
 
-    try {
-        // Đo thời gian bắt đầu giải mã
-        auto startDecrypt = std::chrono::high_resolution_clock::now();
+    // Kiểm tra tính đúng đắn của giải mã
+    std::cout << "Verifying decrypted.txt...\n";
+    std::ifstream original("plaintext.txt", std::ios::binary);
+    std::ifstream decrypted("decrypted.txt", std::ios::binary);
 
-        if (DecryptFile(cipherFile, destFile, privKeyPath) == 0) {
-            // Đo thời gian kết thúc giải mã
-            auto endDecrypt = std::chrono::high_resolution_clock::now();
-            auto decryptDuration = std::chrono::duration_cast<std::chrono::milliseconds>(endDecrypt - startDecrypt);
-
-            std::cout << "Đã giải mã file [" << cipherFile << "] => [" << destFile << "]\n";
-            std::cout << "Thời gian giải mã: " << decryptDuration.count() << " ms\n\n";
-
-            // Thống kê tài nguyên sau khi giải mã
-            logMemoryUsage("giải mã");
-        } else {
-            std::cerr << "DecryptFile thất bại!\n";
-            return 1;
-        }
-    } catch (const std::exception &ex) {
-        std::cerr << "Lỗi khi giải mã: " << ex.what() << std::endl;
+    if (!original) {
+        std::cerr << "Cannot open plaintext.txt for verification.\n";
+        return 1;
+    }
+    if (!decrypted) {
+        std::cerr << "Cannot open decrypted.txt for verification.\n";
         return 1;
     }
 
-    // Kiểm tra nội dung file
-    std::ifstream fin1(sourceFile, std::ios::binary);
-    std::ifstream fin2(destFile, std::ios::binary);
+    std::istreambuf_iterator<char> original_it(original);
+    std::istreambuf_iterator<char> decrypted_it(decrypted);
 
-    if (fin1 && fin2) {
-        std::string s1((std::istreambuf_iterator<char>(fin1)), std::istreambuf_iterator<char>());
-        std::string s2((std::istreambuf_iterator<char>(fin2)), std::istreambuf_iterator<char>());
+    std::istreambuf_iterator<char> end;
 
-        if (s1 == s2) {
-            std::cout << "Nội dung file giải mã giống với file gốc!\n";
-        } else {
-            std::cout << "File giải mã KHÔNG khớp nội dung file gốc.\n";
-        }
+    bool match = std::equal(original_it, end, decrypted_it);
+
+    if (match) {
+        std::cout << "Verification successful: decrypted.txt matches plaintext.txt\n";
+    } else {
+        std::cerr << "Verification failed: decrypted.txt does not match plaintext.txt\n";
     }
 
     return 0;

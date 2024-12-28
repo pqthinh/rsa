@@ -1,5 +1,23 @@
-### k=32768:
+sau khi nâng cấp: 32768
 
+Time taken to generate keys: 91.4876 seconds
+Saving keys to mykey.pub and mykey.key
+Time taken to save keys: 0.00161771 seconds
+Keys generated and saved successfully.
+Encrypting plaintext.txt to ciphertext.bin using mykey.pub...
+Encryption completed successfully.
+Time taken to encrypt: 0.00211654 seconds
+Decrypting ciphertext.bin to decrypted.txt using mykey.key...
+Decryption completed successfully.
+Time taken to decrypt: 2.39127 seconds
+Verifying decrypted.txt...
+Verification successful: decrypted.txt matches plaintext.txt
+
+
+
+
+### k=32768:
+không ra kết quả trong 2 tiếng
 
 ### k=16384:
 Đã lưu khóa công khai vào [mykey.pub]
