@@ -1,0 +1,3 @@
+/Users/dieuly/Downloads/rsa8192/server/build/CMakeFiles/RSA_REST_API.dir
+/Users/dieuly/Downloads/rsa8192/server/build/CMakeFiles/edit_cache.dir
+/Users/dieuly/Downloads/rsa8192/server/build/CMakeFiles/rebuild_cache.dir

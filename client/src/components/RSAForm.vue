@@ -4,31 +4,32 @@
 
         <!-- RSA Key Generation -->
         <section class="rsa-section">
-            <h2>Create RSA public / private keys</h2>
+            <h2>Create RSA Public / Private Keys</h2>
             <div class="form-control">
                 <label>Encryption Mode</label>
                 <select v-model="selectedBits">
-                    <option value="16">16 Bits</option>
-                    <option value="128">128 Bits</option>
-                    <option value="512">512 Bits</option>
                     <option value="1024">1024 Bits</option>
                     <option value="2048">2048 Bits</option>
                     <option value="4096">4096 Bits</option>
                     <option value="8192">8192 Bits</option>
                     <option value="16384">16384 Bits</option>
+                    <option value="32768">32768 Bits</option>
                 </select>
             </div>
             <div class="key-container">
                 <div class="form-control">
                     <label>Public Key</label>
-                    <textarea v-model="publicKey" rows="10" placeholder="Public Key"></textarea>
+                    <textarea v-model="publicKey" rows="10" placeholder="Public Key" readonly></textarea>
                 </div>
                 <div class="form-control">
                     <label>Private Key</label>
-                    <textarea v-model="privateKey" rows="10" placeholder="Private Key"></textarea>
+                    <textarea v-model="privateKey" rows="10" placeholder="Private Key" readonly></textarea>
                 </div>
             </div>
-            <button class="button" @click="generateKeysFunction">Create Publickey / Privatekey</button>
+            <button class="button" @click="generateKeysFunction" :disabled="isGeneratingKeys">
+                {{ isGeneratingKeys ? 'Generating...' : 'Create Public Key / Private Key' }}
+            </button>
+            <p v-if="keyGenerationError" class="error-message">{{ keyGenerationError }}</p>
         </section>
 
         <!-- RSA Encryption -->
@@ -36,20 +37,22 @@
             <h2>RSA Encryption</h2>
             <div class="form-container">
                 <div class="form-control">
-                    <label>Encryption Text</label>
-                    <textarea v-model="encryptionText" rows="5" placeholder="Encryption Text"></textarea>
+                    <label>Plaintext</label>
+                    <textarea v-model="encryptionText" rows="5" placeholder="Enter text to encrypt"></textarea>
                 </div>
                 <div class="form-control">
                     <label>Public Key</label>
-                    <textarea v-model="encryptionKey" rows="5" placeholder="Public key"></textarea>
+                    <textarea v-model="encryptionKey" rows="5" placeholder="Paste Public Key"></textarea>
                 </div>
-                
             </div>
-            <button class="button" @click="encryptText">Encrypt</button>
+            <button class="button" @click="encryptText" :disabled="isEncrypting">
+                {{ isEncrypting ? 'Encrypting...' : 'Encrypt' }}
+            </button>
             <div class="form-control">
                 <label>Encrypted Text</label>
-                <textarea v-model="encryptedText" rows="20" readonly></textarea>
+                <textarea v-model="encryptedText" rows="10" readonly></textarea>
             </div>
+            <p v-if="encryptionError" class="error-message">{{ encryptionError }}</p>
         </section>
 
         <!-- RSA Decryption -->
@@ -58,30 +61,32 @@
             <div class="form-container">
                 <div class="form-control">
                     <label>Encrypted Text</label>
-                    <textarea v-model="decryptionText" rows="5" placeholder="Encrypted Text"></textarea>
+                    <textarea v-model="decryptionText" rows="5" placeholder="Paste Encrypted Text"></textarea>
                 </div>
                 <div class="form-control">
                     <label>Private Key</label>
-                    <textarea v-model="decryptionKey" rows="5" placeholder="Private key"></textarea>
+                    <textarea v-model="decryptionKey" rows="5" placeholder="Paste Private Key"></textarea>
                 </div>
-                
             </div>
-            <button class="button" @click="decryptText">Decrypt</button>
+            <button class="button" @click="decryptText" :disabled="isDecrypting">
+                {{ isDecrypting ? 'Decrypting...' : 'Decrypt' }}
+            </button>
             <div class="form-control">
                 <label>Decrypted Text</label>
-                <textarea v-model="decryptedText" rows="20" readonly></textarea>
+                <textarea v-model="decryptedText" rows="10" readonly></textarea>
             </div>
+            <p v-if="decryptionError" class="error-message">{{ decryptionError }}</p>
         </section>
     </div>
 </template>
 
 <script>
-import { generateKeys, encrypt, decrypt, createPublicKeyPem, createPrivateKeyPem, parseRSAPublicKey, parseRSAPrivateKey } from '../utils/rsa';
+import axios from 'axios';
 
 export default {
     data() {
         return {
-            selectedBits: '16',
+            selectedBits: '2048', // Default key size
             publicKey: '',
             privateKey: '',
             encryptionText: '',
@@ -90,36 +95,156 @@ export default {
             decryptionText: '',
             decryptionKey: '',
             decryptedText: '',
+            // Loading states
+            isGeneratingKeys: false,
+            isEncrypting: false,
+            isDecrypting: false,
+            // Error messages
+            keyGenerationError: '',
+            encryptionError: '',
+            decryptionError: '',
         };
     },
     methods: {
-        generateKeysFunction() {
-            // Logic to generate RSA keys
-            console.log('Generating keys for', this.selectedBits);
-            const keys = generateKeys(this.selectedBits);
-            // this.publicKey = createPublicKeyPem(keys.publicKey.e, keys.publicKey.n);
-            // this.privateKey = createPrivateKeyPem(keys.privateKey.d, keys.privateKey.n);
-            // console.log(this.publicKey);
-            // console.log(this.privateKey);
-            this.publicKey = JSON.stringify(keys.publicKey);
-            this.privateKey = JSON.stringify(keys.privateKey);
+        /**
+         * Generate RSA Public and Private Keys
+         */
+        async generateKeysFunction() {
+            this.isGeneratingKeys = true;
+            this.keyGenerationError = '';
+            this.publicKey = '';
+            this.privateKey = '';
 
+            try {
+                const response = await axios.post('http://localhost:18080/generate_keys', {
+                    keysize: parseInt(this.selectedBits),
+                }, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                if (response.status === 200 && response.data) {
+                    this.publicKey = response.data.public_key || '';
+                    this.privateKey = response.data.private_key || '';
+                } else {
+                    this.keyGenerationError = 'Unexpected response from the server.';
+                }
+            } catch (error) {
+                console.error('Error generating keys:', error);
+                if (error.response) {
+                    // Server responded with a status other than 2xx
+                    this.keyGenerationError = `Error ${error.response.status}: ${error.response.statusText}`;
+                } else if (error.request) {
+                    // No response received
+                    this.keyGenerationError = 'No response from the server. Please ensure the server is running.';
+                } else {
+                    // Other errors
+                    this.keyGenerationError = 'An error occurred while generating keys.';
+                }
+            } finally {
+                this.isGeneratingKeys = false;
+            }
         },
-        encryptText() {
-            // Encrypt the encryptionText using encryptionKey
-            // this.encryptedText = 'Encrypted: ' + this.encryptionText; // Placeholder logic
-            // const encrypted = encrypt(parseRSAPublicKey(this.encryptionKey), this.encryptionText);
-            // this.encryptedText = encrypted;
-            const encrypted = encrypt(this.publicKey, this.encryptionText);
-            this.encryptedText = encrypted;
+
+        /**
+         * Encrypt plaintext using the provided public key
+         */
+        async encryptText() {
+            // Reset previous outputs and errors
+            this.encryptedText = '';
+            this.encryptionError = '';
+
+            // Validate inputs
+            if (!this.encryptionKey.trim()) {
+                this.encryptionError = 'Public key is required for encryption.';
+                return;
+            }
+
+            if (!this.encryptionText.trim()) {
+                this.encryptionError = 'Plaintext is required for encryption.';
+                return;
+            }
+
+            this.isEncrypting = true;
+
+            try {
+                const response = await axios.post('http://localhost:18080/encrypt', {
+                    public_key: this.encryptionKey.trim(),
+                    plaintext: this.encryptionText.trim(),
+                }, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                if (response.status === 200 && response.data) {
+                    this.encryptedText = response.data.encrypted_text || '';
+                } else {
+                    this.encryptionError = 'Unexpected response from the server.';
+                }
+            } catch (error) {
+                console.error('Error encrypting text:', error);
+                if (error.response) {
+                    this.encryptionError = `Error ${error.response.status}: ${error.response.statusText}`;
+                } else if (error.request) {
+                    this.encryptionError = 'No response from the server. Please ensure the server is running.';
+                } else {
+                    this.encryptionError = 'An error occurred while encrypting the text.';
+                }
+            } finally {
+                this.isEncrypting = false;
+            }
         },
-        decryptText() {
-            // Decrypt the decryptionText using decryptionKey
-            // this.decryptedText = 'Decrypted: ' + this.decryptionText; // Placeholder logic
-            // const decrypted = decrypt(parseRSAPrivateKey(this.decryptionKey), this.decryptionText);
-            // this.decryptedText = decrypted;
-            const decrypted = decrypt(this.privateKey, this.decryptionText);
-            this.decryptedText = decrypted;
+
+        /**
+         * Decrypt encrypted text using the provided private key
+         */
+        async decryptText() {
+            // Reset previous outputs and errors
+            this.decryptedText = '';
+            this.decryptionError = '';
+
+            // Validate inputs
+            if (!this.decryptionKey.trim()) {
+                this.decryptionError = 'Private key is required for decryption.';
+                return;
+            }
+
+            if (!this.decryptionText.trim()) {
+                this.decryptionError = 'Encrypted text is required for decryption.';
+                return;
+            }
+
+            this.isDecrypting = true;
+
+            try {
+                const response = await axios.post('http://localhost:18080/decrypt', {
+                    private_key: this.decryptionKey.trim(),
+                    encrypted_text: this.decryptionText.trim(),
+                }, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                if (response.status === 200 && response.data) {
+                    this.decryptedText = response.data.decrypted_text || '';
+                } else {
+                    this.decryptionError = 'Unexpected response from the server.';
+                }
+            } catch (error) {
+                console.error('Error decrypting text:', error);
+                if (error.response) {
+                    this.decryptionError = `Error ${error.response.status}: ${error.response.statusText}`;
+                } else if (error.request) {
+                    this.decryptionError = 'No response from the server. Please ensure the server is running.';
+                } else {
+                    this.decryptionError = 'An error occurred while decrypting the text.';
+                }
+            } finally {
+                this.isDecrypting = false;
+            }
         },
     },
 };
@@ -157,6 +282,7 @@ textarea {
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 4px;
+    resize: vertical;
 }
 
 button {
@@ -166,11 +292,18 @@ button {
     border: none;
     cursor: pointer;
     border-radius: 4px;
+    font-size: 16px;
 }
 
-button:hover {
+button:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+}
+
+button:hover:not(:disabled) {
     background-color: #218838;
 }
+
 .form-container {
     background-color: #f8f9fa;
     padding: 20px;
@@ -203,4 +336,8 @@ button:hover {
     box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.25);
 }
 
+.error-message {
+    color: red;
+    margin-top: 10px;
+}
 </style>
