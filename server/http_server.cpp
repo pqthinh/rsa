@@ -84,6 +84,23 @@ std::map<std::string, std::string> parse_headers(const std::string &headers)
     return header_map;
 }
 
+// Function to add CORS headers to a response
+std::string add_cors_headers(const std::string &response) {
+    std::istringstream iss(response);
+    std::string status_line;
+    std::getline(iss, status_line);
+    
+    // Prepare CORS headers
+    std::ostringstream oss;
+    oss << status_line << "\r\n"
+        << "Access-Control-Allow-Origin: *\r\n"
+        << "Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
+        << "Access-Control-Allow-Headers: Content-Type\r\n"
+        << "Access-Control-Max-Age: 86400\r\n" // 24 hours
+        << response.substr(status_line.length() + 2); // +2 for CRLF
+    return oss.str();
+}
+
 // Function to send a complete HTTP response
 bool send_response(int client_socket, const std::string &response)
 {
@@ -146,6 +163,22 @@ void handle_client(int client_socket, sockaddr_in client_addr)
     std::string path;
     std::string http_version;
     request_line_stream >> method >> path >> http_version;
+
+    // Handle preflight OPTIONS request
+    if (method == "OPTIONS") {
+        std::cout << "[" << current_timestamp() << "] Handling OPTIONS request from " << client_ip << ":" << client_port << "\n";
+        std::ostringstream oss;
+        oss << "HTTP/1.1 204 No Content\r\n"
+            << "Access-Control-Allow-Origin: *\r\n"
+            << "Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
+            << "Access-Control-Allow-Headers: Content-Type\r\n"
+            << "Access-Control-Max-Age: 86400\r\n" // 24 hours
+            << "Connection: close\r\n"
+            << "\r\n";
+        send_response(client_socket, oss.str());
+        close(client_socket);
+        return;
+    }
 
     // Parse headers
     std::string headers;
@@ -230,8 +263,14 @@ void handle_client(int client_socket, sockaddr_in client_addr)
         if (keysize < 512 || keysize % 64 != 0)
         {
             std::cerr << "[" << current_timestamp() << "] Invalid keysize: " << keysize << "\n";
-            std::string bad_request = "HTTP/1.1 400 Bad Request\r\nContent-Length: 0\r\n\r\n";
-            send_response(client_socket, bad_request);
+            std::ostringstream oss;
+            oss << "HTTP/1.1 400 Bad Request\r\n"
+                << "Access-Control-Allow-Origin: *\r\n"
+                << "Content-Length: 0\r\n"
+                << "Connection: close\r\n"
+                << "\r\n";
+            response = oss.str();
+            send_response(client_socket, response);
             close(client_socket);
             return;
         }
@@ -253,6 +292,7 @@ void handle_client(int client_socket, sockaddr_in client_addr)
             oss << "HTTP/1.1 200 OK\r\n"
                 << "Content-Type: application/json\r\n"
                 << "Content-Length: " << json_response.length() << "\r\n"
+                << "Access-Control-Allow-Origin: *\r\n"
                 << "Connection: close\r\n"
                 << "\r\n"
                 << json_response;
@@ -263,8 +303,14 @@ void handle_client(int client_socket, sockaddr_in client_addr)
         catch (const std::exception &e)
         {
             std::cerr << "[" << current_timestamp() << "] Exception in /generate_keys: " << e.what() << "\n";
-            std::string internal_error = "HTTP/1.1 500 Internal Server Error\r\nContent-Length: 0\r\n\r\n";
-            send_response(client_socket, internal_error);
+            std::ostringstream oss;
+            oss << "HTTP/1.1 500 Internal Server Error\r\n"
+                << "Access-Control-Allow-Origin: *\r\n"
+                << "Content-Length: 0\r\n"
+                << "Connection: close\r\n"
+                << "\r\n";
+            response = oss.str();
+            send_response(client_socket, response);
             close(client_socket);
             return;
         }
@@ -303,8 +349,14 @@ void handle_client(int client_socket, sockaddr_in client_addr)
         if (public_key.empty() || plaintext.empty())
         {
             std::cerr << "[" << current_timestamp() << "] Missing public_key or plaintext in /encrypt request.\n";
-            std::string bad_request = "HTTP/1.1 400 Bad Request\r\nContent-Length: 0\r\n\r\n";
-            send_response(client_socket, bad_request);
+            std::ostringstream oss;
+            oss << "HTTP/1.1 400 Bad Request\r\n"
+                << "Access-Control-Allow-Origin: *\r\n"
+                << "Content-Length: 0\r\n"
+                << "Connection: close\r\n"
+                << "\r\n";
+            response = oss.str();
+            send_response(client_socket, response);
             close(client_socket);
             return;
         }
@@ -342,6 +394,7 @@ void handle_client(int client_socket, sockaddr_in client_addr)
             oss << "HTTP/1.1 200 OK\r\n"
                 << "Content-Type: application/json\r\n"
                 << "Content-Length: " << json_response.length() << "\r\n"
+                << "Access-Control-Allow-Origin: *\r\n"
                 << "Connection: close\r\n"
                 << "\r\n"
                 << json_response;
@@ -352,8 +405,14 @@ void handle_client(int client_socket, sockaddr_in client_addr)
         catch (const std::exception &e)
         {
             std::cerr << "[" << current_timestamp() << "] Exception in /encrypt: " << e.what() << "\n";
-            std::string internal_error = "HTTP/1.1 500 Internal Server Error\r\nContent-Length: 0\r\n\r\n";
-            send_response(client_socket, internal_error);
+            std::ostringstream oss;
+            oss << "HTTP/1.1 500 Internal Server Error\r\n"
+                << "Access-Control-Allow-Origin: *\r\n"
+                << "Content-Length: 0\r\n"
+                << "Connection: close\r\n"
+                << "\r\n";
+            response = oss.str();
+            send_response(client_socket, response);
             close(client_socket);
             return;
         }
@@ -392,8 +451,14 @@ void handle_client(int client_socket, sockaddr_in client_addr)
         if (private_key.empty() || encrypted_text.empty())
         {
             std::cerr << "[" << current_timestamp() << "] Missing private_key or encrypted_text in /decrypt request.\n";
-            std::string bad_request = "HTTP/1.1 400 Bad Request\r\nContent-Length: 0\r\n\r\n";
-            send_response(client_socket, bad_request);
+            std::ostringstream oss;
+            oss << "HTTP/1.1 400 Bad Request\r\n"
+                << "Access-Control-Allow-Origin: *\r\n"
+                << "Content-Length: 0\r\n"
+                << "Connection: close\r\n"
+                << "\r\n";
+            response = oss.str();
+            send_response(client_socket, response);
             close(client_socket);
             return;
         }
@@ -435,6 +500,7 @@ void handle_client(int client_socket, sockaddr_in client_addr)
             oss << "HTTP/1.1 200 OK\r\n"
                 << "Content-Type: application/json\r\n"
                 << "Content-Length: " << json_response.length() << "\r\n"
+                << "Access-Control-Allow-Origin: *\r\n"
                 << "Connection: close\r\n"
                 << "\r\n"
                 << json_response;
@@ -445,8 +511,14 @@ void handle_client(int client_socket, sockaddr_in client_addr)
         catch (const std::exception &e)
         {
             std::cerr << "[" << current_timestamp() << "] Exception in /decrypt: " << e.what() << "\n";
-            std::string internal_error = "HTTP/1.1 500 Internal Server Error\r\nContent-Length: 0\r\n\r\n";
-            send_response(client_socket, internal_error);
+            std::ostringstream oss;
+            oss << "HTTP/1.1 500 Internal Server Error\r\n"
+                << "Access-Control-Allow-Origin: *\r\n"
+                << "Content-Length: 0\r\n"
+                << "Connection: close\r\n"
+                << "\r\n";
+            response = oss.str();
+            send_response(client_socket, response);
             close(client_socket);
             return;
         }
@@ -455,8 +527,14 @@ void handle_client(int client_socket, sockaddr_in client_addr)
     {
         std::cout << "[" << current_timestamp() << "] Unknown endpoint: " << path << "\n";
         // Not Found
-        std::string not_found = "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\n\r\n";
-        send_response(client_socket, not_found);
+        std::ostringstream oss;
+        oss << "HTTP/1.1 404 Not Found\r\n"
+            << "Access-Control-Allow-Origin: *\r\n"
+            << "Content-Length: 0\r\n"
+            << "Connection: close\r\n"
+            << "\r\n";
+        response = oss.str();
+        send_response(client_socket, response);
         close(client_socket);
         return;
     }
